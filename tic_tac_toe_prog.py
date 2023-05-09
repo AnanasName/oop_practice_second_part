@@ -1,4 +1,5 @@
 import random
+from abc import ABC, abstractmethod
 
 
 # Класс, отражающий сущность клетки игры (содержит свой номер - __number, булево значение занята она или нет - __taken,
@@ -105,7 +106,7 @@ class Board:
 
 
 # Класс, отражающий сущность игрока (содержит булево значение выиграл игрок или нет - __won, имя игрока - __player_name)
-class Player:
+class Player(ABC):
 
     # Метод инициализации игрока
     def __init__(self, won=False, player_name="X"):
@@ -124,6 +125,24 @@ class Player:
     def get_player_name(self):
         return self.__player_name
 
+    @abstractmethod
+    def input_cell_number(self):
+        pass
+
+
+class HumanPlayer(Player):
+
+    def input_cell_number(self):
+        cell_number = input()
+        return cell_number
+
+
+class PcPlayer(Player):
+
+    def input_cell_number(self):
+        cell_number = random.randint(1, 9)
+        return cell_number
+
 
 # Класс, отражающий сущность игровой механики
 class Game:
@@ -139,10 +158,14 @@ class Game:
             return True
         return False
 
+    def check_if_win(self, player: Player, first_player_turn: bool, game_board: Board) -> bool:
+        if game_board.check_if_win(first_player_turn):
+            player.make_won()
+
     # Главный метод игры, отвечающий за игровой процесс
     def main(self):
-        hum_player = Player(player_name="X")
-        ai_player = Player(player_name="O")
+        hum_player = HumanPlayer(player_name="X")
+        pc_player = PcPlayer(player_name="O")
         game_board = Board()
 
         counter = 9
@@ -150,34 +173,32 @@ class Game:
         print("Welcome to tic-tac-toe!")
         game_board.print_board()
 
-        while (not hum_player.is_won()) and (not ai_player.is_won()) and (counter > 0):
+        while (not hum_player.is_won()) and (not pc_player.is_won()) and (counter > 0):
             if self.first_player_turn:
                 print(f"What is {hum_player.get_player_name()}'s move? (1-9)")
-                cell_number = input()
+                cell_number = hum_player.input_cell_number()
                 while not self.try_take_cell(game_board, int(cell_number), True):
                     print("This cell already taken! Choose another!")
-                    cell_number = input()
+                    cell_number = hum_player.input_cell_number()
                 game_board.print_board()
-                if game_board.check_if_win(True):
-                    hum_player.make_won()
+                self.check_if_win(hum_player, self.first_player_turn, game_board)
 
             else:
-                print(f"What is {ai_player.get_player_name()}'s move? (1-9)")
-                cell_number = random.randint(1, 9)
+                print(f"What is {pc_player.get_player_name()}'s move? (1-9)")
+                cell_number = pc_player.input_cell_number()
                 while not self.try_take_cell(game_board, int(cell_number), False):
-                    cell_number = random.randint(1, 9)
+                    cell_number = pc_player.input_cell_number()
                 print(cell_number)
                 game_board.print_board()
-                if game_board.check_if_win(False):
-                    ai_player.make_won()
+                self.check_if_win(pc_player, self.first_player_turn, game_board)
 
             self.first_player_turn = not self.first_player_turn
             counter = counter - 1
 
         if hum_player.is_won():
             print(f"{hum_player.get_player_name()} has won the game!")
-        elif ai_player.is_won():
-            print(f"{ai_player.get_player_name()} has won the game!")
+        elif pc_player.is_won():
+            print(f"{pc_player.get_player_name()} has won the game!")
         else:
             print("Game tied!")
 

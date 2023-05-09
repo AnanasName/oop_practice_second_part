@@ -16,7 +16,7 @@ class Cell:
     def is_taken(self):
         return self.__taken
 
-    #
+    # Метод получения статуса занятия клетки первым игроков
     def is_taken_by_first_player(self):
         return self.__taken_by_first_player
 
@@ -125,20 +125,29 @@ class Player(ABC):
     def get_player_name(self):
         return self.__player_name
 
+    # Абстрактный метод получения клетки, которую займет игрок. Наследники должны реализовать
     @abstractmethod
     def input_cell_number(self):
         pass
 
 
+# Класс, отражающий сущность игрока-человека
 class HumanPlayer(Player):
 
-    def input_cell_number(self):
+    # Метод, отвечающий за получение значения клетки для игрока-человека
+    def input_cell_number(self) -> int:
         cell_number = input()
-        return cell_number
+
+        while not cell_number.isdigit():
+            print("Incorrect Value! Try Again!")
+            cell_number = input("")
+        return int(cell_number)
 
 
+# Класс, отражающий сущность игрока-компьютера
 class PcPlayer(Player):
 
+    # Метод, отвечающий за получение случайного значения клетки для игрока-компьютера
     def input_cell_number(self):
         cell_number = random.randint(1, 9)
         return cell_number
@@ -158,14 +167,43 @@ class Game:
             return True
         return False
 
-    def check_if_win(self, player: Player, first_player_turn: bool, game_board: Board) -> bool:
+    # Метод, отвечающий за проверку победил игрок или нет
+    def make_won_if_player_win(self, player: Player, first_player_turn: bool, game_board: Board):
         if game_board.check_if_win(first_player_turn):
             player.make_won()
 
+    # Метод, отражающий логику хода игрока
+    def player_turn(self, player: Player, game_board: Board, first_player_turn: bool):
+        print(f"What is {player.get_player_name()}'s move? (1-9)")
+        cell_number = player.input_cell_number()
+        while not self.try_take_cell(game_board, int(cell_number), first_player_turn):
+            if isinstance(player, HumanPlayer):
+                print("This cell already taken! Choose another!")
+            cell_number = player.input_cell_number()
+        if isinstance(player, PcPlayer):
+            print(cell_number)
+        game_board.print_board()
+        self.make_won_if_player_win(player, first_player_turn, game_board)
+
     # Главный метод игры, отвечающий за игровой процесс
     def main(self):
-        hum_player = HumanPlayer(player_name="X")
-        pc_player = PcPlayer(player_name="O")
+        player_choice = input(
+            "Do you want to play with computer or by rotation? (1 - with computer, 2 - by rotation): ")
+
+        while not player_choice.isdigit():
+            print("Incorrect Value! Try Again!")
+            player_choice = input(
+                "Do you want to play with computer or by rotation? (1 - with computer, 2 - by rotation): ")
+
+        with_pc = True if int(player_choice) == 1 else False
+
+        if with_pc:
+            player_x = HumanPlayer(player_name="X")
+            player_o = PcPlayer(player_name="O")
+        else:
+            player_x = HumanPlayer(player_name="X")
+            player_o = HumanPlayer(player_name="O")
+
         game_board = Board()
 
         counter = 9
@@ -173,32 +211,19 @@ class Game:
         print("Welcome to tic-tac-toe!")
         game_board.print_board()
 
-        while (not hum_player.is_won()) and (not pc_player.is_won()) and (counter > 0):
+        while (not player_x.is_won()) and (not player_o.is_won()) and (counter > 0):
             if self.first_player_turn:
-                print(f"What is {hum_player.get_player_name()}'s move? (1-9)")
-                cell_number = hum_player.input_cell_number()
-                while not self.try_take_cell(game_board, int(cell_number), True):
-                    print("This cell already taken! Choose another!")
-                    cell_number = hum_player.input_cell_number()
-                game_board.print_board()
-                self.check_if_win(hum_player, self.first_player_turn, game_board)
-
+                self.player_turn(player_x, game_board, self.first_player_turn)
             else:
-                print(f"What is {pc_player.get_player_name()}'s move? (1-9)")
-                cell_number = pc_player.input_cell_number()
-                while not self.try_take_cell(game_board, int(cell_number), False):
-                    cell_number = pc_player.input_cell_number()
-                print(cell_number)
-                game_board.print_board()
-                self.check_if_win(pc_player, self.first_player_turn, game_board)
+                self.player_turn(player_o, game_board, self.first_player_turn)
 
             self.first_player_turn = not self.first_player_turn
             counter = counter - 1
 
-        if hum_player.is_won():
-            print(f"{hum_player.get_player_name()} has won the game!")
-        elif pc_player.is_won():
-            print(f"{pc_player.get_player_name()} has won the game!")
+        if player_x.is_won():
+            print(f"{player_x.get_player_name()} has won the game!")
+        elif player_o.is_won():
+            print(f"{player_o.get_player_name()} has won the game!")
         else:
             print("Game tied!")
 

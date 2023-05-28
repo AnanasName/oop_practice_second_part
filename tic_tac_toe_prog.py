@@ -138,10 +138,22 @@ class HumanPlayer(Player):
     def input_cell_number(self) -> int:
         cell_number = input()
 
-        while not cell_number.isdigit():
+        while not self.__validate_input(cell_number):
             print("Incorrect Value! Try Again!")
-            cell_number = input("")
+            cell_number = input()
+
         return int(cell_number)
+
+    def __validate_input(self, cell_number) -> bool:
+        try:
+            cell_number_as_digit = int(cell_number)
+
+            if 10 > cell_number_as_digit > 0:
+                return True
+            else:
+                return False
+        except:
+            return False
 
 
 # Класс, отражающий сущность игрока-компьютера

@@ -138,13 +138,13 @@ class HumanPlayer(Player):
     def input_cell_number(self) -> int:
         cell_number = input()
 
-        while not self.__validate_input(cell_number):
+        while not self.__validate_cell_number_input(cell_number):
             print("Incorrect Value! Try Again!")
             cell_number = input()
 
         return int(cell_number)
 
-    def __validate_input(self, cell_number) -> bool:
+    def __validate_cell_number_input(self, cell_number) -> bool:
         try:
             cell_number_as_digit = int(cell_number)
 
@@ -168,7 +168,7 @@ class PcPlayer(Player):
 # Класс, отражающий сущность игровой механики
 class Game:
 
-    # Метод, отвечащий за инициализацию объекта игры
+    # Метод, отвечающий за инициализацию объекта игры
     def __init__(self, first_player_turn=True):
         self.first_player_turn = first_player_turn
 
@@ -202,10 +202,9 @@ class Game:
         player_choice = input(
             "Do you want to play with computer or by rotation? (1 - with computer, 2 - by rotation): ")
 
-        while not player_choice.isdigit():
+        while not self.__validate_game_mode_number(player_choice):
             print("Incorrect Value! Try Again!")
-            player_choice = input(
-                "Do you want to play with computer or by rotation? (1 - with computer, 2 - by rotation): ")
+            player_choice = input()
 
         with_pc = True if int(player_choice) == 1 else False
 
@@ -240,6 +239,17 @@ class Game:
             print("Game tied!")
 
         print("Thanks for playing!")
+
+    def __validate_game_mode_number(self, game_mode_number) -> bool:
+        try:
+            game_mode_number = int(game_mode_number)
+
+            if 3 > game_mode_number > 0:
+                return True
+            else:
+                return False
+        except:
+            return False
 
 
 Game().main()
